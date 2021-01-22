@@ -1,0 +1,58 @@
+# Required Python packages:
+#
+# ansible
+# openstacksdk
+
+#- import_playbook: common.yaml
+
+- hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Create DNS zone
+      opentelekomcloud.cloud.dns_zones:
+        name: "sgode.testzone.de."
+        zone_type: private
+        router: "417512e4-260a-4758-b69b-f49857bd8d8e"
+      register: zone
+
+    - name: Create API record
+      opentelekomcloud.cloud.dns_recordset:
+        recordset_name: "api.sgode.testzone.de."
+        zone_id: "{{ zone.zone.id }}"
+        type: "A"
+        records:
+          - "1.1.1.1"
+
+    - name: Create API-int record
+      opentelekomcloud.cloud.dns_recordset:
+        recordset_name: "api-int.sgode.testzone.de."
+        zone_id: "{{ zone.zone.id }}"
+        type: "A"
+        records:
+          - "10.10.10.10"
+
+    - name: Create Ingress record
+      opentelekomcloud.cloud.dns_recordset:
+        recordset_name: "*.apps.sgode.testzone.de."
+        zone_id: "{{ zone.zone.id }}"
+        type: "A"
+        records:
+          - "10.10.10.11"
+
+    - name: Create ETCD SRV record
+      opentelekomcloud.cloud.dns_recordset:
+        recordset_name: "_etcd-server-ssl._tcp.sgode.testzone.de."
+        zone_id: "{{ zone.zone.id }}"
+        type: "SRV"
+        records: 
+          - "3 60 2176 sipserver.example.com."
+
+    - name: Create ETCD records
+      opentelekomcloud.cloud.dns_recordset:
+        recordset_name: "etcdrecords.sgode.testzone.de."
+        zone_id: "{{ zone.zone.id }}"
+        type: "A"
+        records:
+          - "2.2.2.2"
+
